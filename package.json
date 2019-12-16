@@ -1,0 +1,27 @@
+{
+    "name": "maplestory-level-up-warning",
+    "version": "1.0.0",
+    "description": "MapleStory升级警告",
+    "keywords": [
+        "MapleStory",
+        "Electron"
+    ],
+    "main": "out/main.js",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Tarrowren/maplestory-level-up-warning"
+    },
+    "author": "Tarrow",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Tarrowren/maplestory-level-up-warning/issues"
+    },
+    "homepage": "https://github.com/Tarrowren/maplestory-level-up-warning#readme",
+    "devDependencies": {
+        "@types/node": "^12.12.17",
+        "electron": "^6.1.6",
+        "tslint": "^5.20.1",
+        "typescript": "^3.7.3"
+    }
+}
