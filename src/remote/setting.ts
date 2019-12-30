@@ -1,9 +1,9 @@
 import { ipcRenderer } from "electron";
 
-document.onmousemove = (e) => {
+document.onmousemove = e => {
     ipcRenderer.send("position", { x: e.screenX, y: e.screenY });
 };
 
-document.onclick = () => {
-    window.close();
+document.onclick = (e) => {
+    ipcRenderer.send("closeSettingWin");
 };

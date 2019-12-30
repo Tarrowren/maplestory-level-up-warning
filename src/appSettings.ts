@@ -3,10 +3,11 @@ import * as fs from "fs";
 
 let appSettingsPath: string = path.join(__dirname, "..", "appSettings.json");
 
-export interface IAppSettings {
+interface IAppSettings {
     minimizeToSystemTray: boolean;
 }
 
+// 初始值
 export let appSettings: IAppSettings = {
     minimizeToSystemTray: false
 };
@@ -33,7 +34,7 @@ export async function appSettingsInit() {
 
 export async function appSettingsUpdate() {
     try {
-        await new Promise(reject => {
+        await new Promise((_resolve, reject) => {
             fs.writeFile(appSettingsPath, JSON.stringify(appSettings, null, "    "), err => {
                 if (err) {
                     reject(err);

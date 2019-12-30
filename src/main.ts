@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions } from "electron";
+import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions, webContents } from "electron";
 import { getPixel } from "../build/Release/tarrow_pixel.node";
 import * as path from "path";
 import { appSettingsInit, appSettings, appSettingsUpdate } from "./appSettings";
@@ -6,6 +6,8 @@ import { appSettingsInit, appSettings, appSettingsUpdate } from "./appSettings";
 let mainWin: BrowserWindow | null;
 let settingWin: BrowserWindow | null;
 let appTray: Tray | null;
+let settingPosition: { x: number, y: number };
+let timeId: NodeJS.Timeout | null;
 
 app.on("ready", async () => {
     await appSettingsInit();
@@ -13,11 +15,45 @@ app.on("ready", async () => {
     createAppTray();
 });
 
+//#region 监听
+// 打开设置窗口
 ipcMain.on("openSettingWin", () => {
     createSettingWindow();
-}).on("position", (e, position: { x: number, y: number }) => {
+});
+
+// 关闭设置窗口
+ipcMain.on("closeSettingWin", () => {
+    settingWin?.close();
+    mainWin?.webContents.send("settingDone");
+});
+
+// 鼠标位置
+ipcMain.on("position", (_e, position: { x: number, y: number }) => {
+    settingPosition = position;
     mainWin?.webContents.send("rgb", position, getRgb(position.x, position.y));
 });
+
+// 开始检测
+ipcMain.on("monitoring", () => {
+    timeId = setTimeout(function onMonitor() {
+        let rgb = getRgb(settingPosition.x, settingPosition.y);
+        if (rgb.r === 0) {
+            mainWin?.webContents.send("stopMonitoring");
+            // 报警
+            return;
+        }
+        timeId = setTimeout(onMonitor, 1000);
+        mainWin?.webContents.send("rgb", settingPosition, rgb);//
+    }, 1000);
+});
+
+// 停止检测
+ipcMain.on("stopMonitoring", () => {
+    if (timeId) {
+        clearTimeout(timeId);
+    }
+});
+//#endregion
 
 function createAppTray() {
     var trayMenu: MenuItemConstructorOptions[] = [{
@@ -47,6 +83,7 @@ function createMainWindow() {
     mainWin = new BrowserWindow({
         fullscreenable: false,
         maximizable: false,
+        resizable: false,
         width: 400,
         height: 300,
         webPreferences: {
@@ -55,7 +92,7 @@ function createMainWindow() {
     });
     mainWin.removeMenu();
     mainWin.loadFile(path.join(__dirname, "..", "view", "index.html"));
-    mainWin.on("close", (e) => {
+    mainWin.on("close", e => {
         if (appSettings.minimizeToSystemTray) {
             e.preventDefault();
             mainWin?.hide();
@@ -71,7 +108,6 @@ function createSettingWindow() {
     }
     settingWin = new BrowserWindow({
         frame: false,
-        fullscreen: true,
         alwaysOnTop: true,
         resizable: false,
         transparent: true,
@@ -82,6 +118,7 @@ function createSettingWindow() {
         }
     });
     settingWin.loadFile(path.join(__dirname, "..", "view", "setting.html"));
+    settingWin.maximize();
     settingWin.on("closed", () => {
         settingWin = null;
     });
