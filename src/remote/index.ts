@@ -44,6 +44,7 @@ ipcRenderer.on("rgb", (_e, position: { x: number, y: number }, rgb: { r: number,
 ipcRenderer.on("settingDone", () => {
     tipSpan.innerText = AppState.NotMonitor;
     monitoringBtn.disabled = false;
+    settingBtn.innerText = "重新设置";
 });
 
 ipcRenderer.on("stopMonitoring", () => {

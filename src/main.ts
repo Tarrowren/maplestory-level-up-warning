@@ -1,10 +1,11 @@
-import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions, webContents } from "electron";
+import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions } from "electron";
 import { getPixel } from "../build/Release/tarrow_pixel.node";
 import * as path from "path";
 import { appSettingsInit, appSettings, appSettingsUpdate } from "./appSettings";
 
 let mainWin: BrowserWindow | null;
 let settingWin: BrowserWindow | null;
+let warningWin: BrowserWindow | null;
 let appTray: Tray | null;
 let settingPosition: { x: number, y: number };
 let timeId: NodeJS.Timeout | null;
@@ -37,13 +38,13 @@ ipcMain.on("position", (_e, position: { x: number, y: number }) => {
 ipcMain.on("monitoring", () => {
     timeId = setTimeout(function onMonitor() {
         let rgb = getRgb(settingPosition.x, settingPosition.y);
+        // if (rgb.r !== 0 && rgb.g !== 0 && rgb.b === 0) {
         if (rgb.r === 0) {
+            createWarningWindow();
             mainWin?.webContents.send("stopMonitoring");
-            // 报警
             return;
         }
         timeId = setTimeout(onMonitor, 1000);
-        mainWin?.webContents.send("rgb", settingPosition, rgb);//
     }, 1000);
 });
 
@@ -56,21 +57,34 @@ ipcMain.on("stopMonitoring", () => {
 //#endregion
 
 function createAppTray() {
-    var trayMenu: MenuItemConstructorOptions[] = [{
-        label: "最小化到系统托盘",
-        type: "checkbox",
-        checked: appSettings.minimizeToSystemTray,
-        click: async function (item) {
-            appSettings.minimizeToSystemTray = item.checked;
-            await appSettingsUpdate();
+    let trayMenu: MenuItemConstructorOptions[] = [
+        {
+            label: "置于顶层",
+            type: "checkbox",
+            checked: appSettings.alwaysOnTop,
+            click: async function (item) {
+                appSettings.alwaysOnTop = item.checked;
+                mainWin?.setAlwaysOnTop(appSettings.alwaysOnTop);
+                await appSettingsUpdate();
+            }
+        }, {
+            label: "最小化到系统托盘",
+            type: "checkbox",
+            checked: appSettings.minimizeToSystemTray,
+            click: async function (item) {
+                appSettings.minimizeToSystemTray = item.checked;
+                await appSettingsUpdate();
+            }
+        }, {
+            type: "separator"
+        }, {
+            label: "退出",
+            click: function () {
+                appSettings.minimizeToSystemTray = false;
+                app.quit();
+            }
         }
-    }, {
-        label: "退出",
-        click: function () {
-            appSettings.minimizeToSystemTray = false;
-            app.quit();
-        }
-    }];
+    ];
     appTray = new Tray(path.join(__dirname, "..", "resource", "app.ico"));
     appTray.setToolTip("maplestory level up warning");
     appTray.setContextMenu(Menu.buildFromTemplate(trayMenu));
@@ -81,9 +95,11 @@ function createAppTray() {
 
 function createMainWindow() {
     mainWin = new BrowserWindow({
+        title: "冒险岛升级提醒",
         fullscreenable: false,
         maximizable: false,
         resizable: false,
+        alwaysOnTop: appSettings.alwaysOnTop,
         width: 400,
         height: 300,
         webPreferences: {
@@ -121,6 +137,30 @@ function createSettingWindow() {
     settingWin.maximize();
     settingWin.on("closed", () => {
         settingWin = null;
+    });
+}
+
+function createWarningWindow() {
+    if (mainWin === null) {
+        return;
+    }
+    warningWin = new BrowserWindow({
+        title: "警告",
+        width: 400,
+        height: 300,
+        center: true,
+        alwaysOnTop: true,
+        resizable: false,
+        modal: true,
+        parent: mainWin,
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+    warningWin.removeMenu();
+    warningWin.loadFile(path.join(__dirname, "..", "view", "warning.html"));
+    warningWin.on("closed", () => {
+        warningWin = null;
     });
 }
 
