@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions } from "electron";
+import { BrowserWindow, app, ipcMain, Tray, Menu, MenuItemConstructorOptions, dialog } from "electron";
 import { getPixel } from "../build/Release/tarrow_pixel.node";
 import * as path from "path";
 import { appSettingsInit, appSettings, appSettingsUpdate } from "./appSettings";
@@ -38,8 +38,8 @@ ipcMain.on("position", (_e, position: { x: number, y: number }) => {
 ipcMain.on("monitoring", () => {
     timeId = setTimeout(function onMonitor() {
         let rgb = getRgb(settingPosition.x, settingPosition.y);
-        // if (rgb.r !== 0 && rgb.g !== 0 && rgb.b === 0) {
-        if (rgb.r === 0) {
+        if (rgb.r !== 0 && rgb.g !== 0 && rgb.b === 0) {
+            timeId = null;
             createWarningWindow();
             mainWin?.webContents.send("stopMonitoring");
             return;
@@ -53,38 +53,60 @@ ipcMain.on("stopMonitoring", () => {
     if (timeId) {
         clearTimeout(timeId);
     }
+    timeId = null;
 });
 //#endregion
 
 function createAppTray() {
-    let trayMenu: MenuItemConstructorOptions[] = [
-        {
-            label: "置于顶层",
-            type: "checkbox",
-            checked: appSettings.alwaysOnTop,
-            click: async function (item) {
-                appSettings.alwaysOnTop = item.checked;
-                mainWin?.setAlwaysOnTop(appSettings.alwaysOnTop);
-                await appSettingsUpdate();
+    let trayMenu: MenuItemConstructorOptions[] = [{
+        label: "设置警报音乐",
+        click: async function () {
+            if (mainWin === null) {
+                return;
             }
-        }, {
-            label: "最小化到系统托盘",
-            type: "checkbox",
-            checked: appSettings.minimizeToSystemTray,
-            click: async function (item) {
-                appSettings.minimizeToSystemTray = item.checked;
-                await appSettingsUpdate();
+            if (timeId) {
+                clearTimeout(timeId);
+                timeId = null;
+                mainWin?.webContents.send("stopMonitoring");
+                await dialog.showMessageBox(mainWin, { title: "提示", message: "检测已被停止！", type: "warning" });
             }
-        }, {
-            type: "separator"
-        }, {
-            label: "退出",
-            click: function () {
-                appSettings.minimizeToSystemTray = false;
-                app.quit();
+            let result = await dialog.showOpenDialog(mainWin, { defaultPath: appSettings.warningMusic, properties: ["openFile"], filters: [{ name: "音频文件", extensions: ["wav", "mp3", "mid"] }] });
+            if (result.canceled) {
+                return;
+            }
+            if (result.filePaths && result.filePaths.length > 0) {
+                appSettings.warningMusic = result.filePaths[0];
+                await appSettingsUpdate();
             }
         }
-    ];
+    }, {
+        type: "separator"
+    }, {
+        label: "置于顶层",
+        type: "checkbox",
+        checked: appSettings.alwaysOnTop,
+        click: async function (item) {
+            appSettings.alwaysOnTop = item.checked;
+            mainWin?.setAlwaysOnTop(appSettings.alwaysOnTop);
+            await appSettingsUpdate();
+        }
+    }, {
+        label: "最小化到系统托盘",
+        type: "checkbox",
+        checked: appSettings.minimizeToSystemTray,
+        click: async function (item) {
+            appSettings.minimizeToSystemTray = item.checked;
+            await appSettingsUpdate();
+        }
+    }, {
+        type: "separator"
+    }, {
+        label: "退出",
+        click: function () {
+            appSettings.minimizeToSystemTray = false;
+            app.quit();
+        }
+    }];
     appTray = new Tray(path.join(__dirname, "..", "resource", "app.ico"));
     appTray.setToolTip("maplestory level up warning");
     appTray.setContextMenu(Menu.buildFromTemplate(trayMenu));
