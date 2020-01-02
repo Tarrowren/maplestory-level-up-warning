@@ -10,52 +10,56 @@ let appTray: Tray | null;
 let settingPosition: { x: number, y: number };
 let timeId: NodeJS.Timeout | null;
 
-app.on("ready", async () => {
-    await appSettingsInit();
-    createMainWindow();
-    createAppTray();
-});
+if (!app.requestSingleInstanceLock()) {
+    app.quit();
+} else {
+    app.on("ready", async () => {
+        await appSettingsInit();
+        createMainWindow();
+        createAppTray();
+    });
 
-//#region 监听
-// 打开设置窗口
-ipcMain.on("openSettingWin", () => {
-    createSettingWindow();
-});
+    //#region 监听
+    // 打开设置窗口
+    ipcMain.on("openSettingWin", () => {
+        createSettingWindow();
+    });
 
-// 关闭设置窗口
-ipcMain.on("closeSettingWin", () => {
-    settingWin?.close();
-    mainWin?.webContents.send("settingDone");
-});
+    // 关闭设置窗口
+    ipcMain.on("closeSettingWin", () => {
+        settingWin?.close();
+        mainWin?.webContents.send("settingDone");
+    });
 
-// 鼠标位置
-ipcMain.on("position", (_e, position: { x: number, y: number }) => {
-    settingPosition = position;
-    mainWin?.webContents.send("rgb", position, getRgb(position.x, position.y));
-});
+    // 鼠标位置
+    ipcMain.on("position", (_e, position: { x: number, y: number }) => {
+        settingPosition = position;
+        mainWin?.webContents.send("rgb", position, getRgb(position.x, position.y));
+    });
 
-// 开始检测
-ipcMain.on("monitoring", () => {
-    timeId = setTimeout(function onMonitor() {
-        let rgb = getRgb(settingPosition.x, settingPosition.y);
-        if (rgb.r !== 0 && rgb.g !== 0 && rgb.b === 0) {
-            timeId = null;
-            createWarningWindow();
-            mainWin?.webContents.send("stopMonitoring");
-            return;
+    // 开始检测
+    ipcMain.on("monitoring", () => {
+        timeId = setTimeout(function onMonitor() {
+            let rgb = getRgb(settingPosition.x, settingPosition.y);
+            if (rgb.r !== 0 && rgb.g !== 0 && rgb.b === 0) {
+                timeId = null;
+                createWarningWindow();
+                mainWin?.webContents.send("stopMonitoring");
+                return;
+            }
+            timeId = setTimeout(onMonitor, 1000);
+        }, 1000);
+    });
+
+    // 停止检测
+    ipcMain.on("stopMonitoring", () => {
+        if (timeId) {
+            clearTimeout(timeId);
         }
-        timeId = setTimeout(onMonitor, 1000);
-    }, 1000);
-});
-
-// 停止检测
-ipcMain.on("stopMonitoring", () => {
-    if (timeId) {
-        clearTimeout(timeId);
-    }
-    timeId = null;
-});
-//#endregion
+        timeId = null;
+    });
+    //#endregion
+}
 
 function createAppTray() {
     let trayMenu: MenuItemConstructorOptions[] = [{

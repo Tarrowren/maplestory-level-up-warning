@@ -8,7 +8,24 @@
     ],
     "main": "out/main.js",
     "scripts": {
-        "rebuild": "node-gyp rebuild"
+        "rebuild": "node-gyp rebuild",
+        "pack": "electron-builder --dir --win --x64"
+    },
+    "build": {
+        "copyright": "Tarrow",
+        "directories": {
+            "output": "../myapp"
+        },
+        "files": [
+            "./build/Release/tarrow_pixel.node",
+            "./out/**/*",
+            "./view/**/*",
+            "./resource/**/*",
+            "./appSettings.json"
+        ],
+        "asarUnpack": [
+            "./appSettings.json"
+        ]
     },
     "repository": {
         "type": "git",
@@ -23,6 +40,7 @@
     "devDependencies": {
         "@types/node": "^13.1.1",
         "electron": "^6.1.7",
+        "electron-builder": "^21.2.0",
         "tslint": "^5.20.1",
         "typescript": "^3.7.4"
     }
