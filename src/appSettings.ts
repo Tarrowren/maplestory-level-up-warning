@@ -1,58 +1,56 @@
-import * as path from "path";
 import * as fs from "fs";
-
-let appSettingsPath: string = path.join(__dirname, "..", "appSettings.json");
+import * as path from "path";
 
 export interface IAppSettings {
     alwaysOnTop: boolean;
     minimizeToSystemTray: boolean;
-    warningMusic: string;
+    warningMusicPath: string;
 }
 
-// 初始值
-export let appSettings: IAppSettings = {
-    alwaysOnTop: false,
-    minimizeToSystemTray: false,
-    warningMusic: path.join(__dirname, "..", "resource", "warning.wav")
-};
+export class AppSettings {
+    private readonly appSettingsFilePath = path.join(
+        __dirname,
+        "..",
+        "appSettings.json"
+    );
+    private readonly appDefaultSettings: IAppSettings = {
+        alwaysOnTop: false,
+        minimizeToSystemTray: false,
+        warningMusicPath: path.join(__dirname, "..", "resource", "warning.wav")
+    };
+    appSettings = this.appDefaultSettings;
 
-export async function appSettingsInit() {
-    try {
-        const appSettingsText = await new Promise<string>((resolve, reject) => fs.readFile(appSettingsPath, (err, data) => {
-            if (err) {
-                reject(err);
-                return;
+    async readAppSettings() {
+        try {
+            const buffer = await fs.promises.readFile(this.appSettingsFilePath);
+
+            const settings = JSON.parse(buffer.toString());
+            for (const p in this.appDefaultSettings) {
+                if (settings[p] === undefined) {
+                    throw Error("undefined");
+                }
+                if (
+                    typeof settings[p] !==
+                    typeof (this.appDefaultSettings as any)[p]
+                ) {
+                    throw Error("type");
+                }
             }
-            resolve(data.toString());
-        }));
-        let readSettings: IAppSettings = JSON.parse(appSettingsText);
-        appSettingsCheckUp(readSettings);
-        appSettings = readSettings;
-    } catch (err) {
-        console.error(err);
-        appSettingsUpdate();
-    }
-}
-
-function appSettingsCheckUp(settings: IAppSettings) {
-    for (let a in appSettings) {
-        if ((settings as any)[a] === undefined) {
-            appSettingsUpdate();
-            return;
+            this.appSettings = settings;
+        } catch (err) {
+            console.error(err);
+            this.writeAppSettings();
         }
     }
-}
 
-export async function appSettingsUpdate() {
-    try {
-        await new Promise((_resolve, reject) => {
-            fs.writeFile(appSettingsPath, JSON.stringify(appSettings, null, "    "), err => {
-                if (err) {
-                    reject(err);
-                }
-            });
-        });
-    } catch (err) {
-        console.error(err);
+    async writeAppSettings() {
+        try {
+            await fs.promises.writeFile(
+                this.appSettingsFilePath,
+                JSON.stringify(this.appSettings, null, "    ")
+            );
+        } catch (err) {
+            console.error(err);
+        }
     }
 }

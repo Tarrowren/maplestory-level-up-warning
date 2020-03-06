@@ -1,23 +1,40 @@
 <html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="script-src 'self' 'unsafe-inline';"
+        />
+        <link
+            rel="stylesheet"
+            href="../node_modules/bootstrap/dist/css/bootstrap.min.css"
+        />
+        <style>
+            .bg-dark {
+                background-color: #1e1e1e !important;
+            }
 
-<head>
-    <meta charset="utf-8">
-    <style>
-        #show {
-            margin-top: 2px;
-            padding: 10px;
-            text-shadow: -1px 0 whitesmoke, 0 1px whitesmoke, 1px 0 whitesmoke, 0 -1px whitesmoke;
-        }
-    </style>
-</head>
+            .bg-light {
+                background-color: #ffffff !important;
+            }
 
-<body>
-    <p id="tip"></p>
-    <button id="setting">设置</button>
-    <button id="monitoring">开始检测</button>
-    <div id="show"></div>
-    <script>var exports = {};</script>
-    <script src="../out/remote/index.js"></script>
-</body>
+            #show {
+                margin-top: 2px;
+                padding: 10px;
+                text-shadow: -1px 0 whitesmoke, 0 1px whitesmoke,
+                    1px 0 whitesmoke, 0 -1px whitesmoke;
+            }
+        </style>
+    </head>
 
+    <body class="bg-dark p-2">
+        <p id="tip"></p>
+        <button id="setting" class="btn btn-light mr-1">设置</button>
+        <button id="monitoring" class="btn btn-light">开始检测</button>
+        <div id="show"></div>
+        <script>
+            var exports = {};
+        </script>
+        <script src="./js/index.js"></script>
+    </body>
 </html>

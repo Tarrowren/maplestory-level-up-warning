@@ -1,4 +1,4 @@
-import { ipcRenderer } from "electron";
+import { remote, ipcRenderer } from "electron";
 
 enum AppState {
     "NotSet" = "未设置提示点！",
@@ -7,10 +7,12 @@ enum AppState {
     "Monitoring" = "正在检测..."
 }
 
-let settingBtn = document.getElementById("setting") as HTMLButtonElement;
-let monitoringBtn = document.getElementById("monitoring") as HTMLButtonElement;
-let showDiv = document.getElementById("show") as HTMLDivElement;
-let tipSpan = document.getElementById("tip") as HTMLSpanElement;
+const settingBtn = document.getElementById("setting") as HTMLButtonElement;
+const monitoringBtn = document.getElementById(
+    "monitoring"
+) as HTMLButtonElement;
+const showDiv = document.getElementById("show") as HTMLDivElement;
+const tipSpan = document.getElementById("tip") as HTMLSpanElement;
 
 tipSpan.innerText = AppState.NotSet;
 monitoringBtn.disabled = true;
@@ -36,10 +38,17 @@ monitoringBtn.onclick = () => {
     }
 };
 
-ipcRenderer.on("rgb", (_e, position: { x: number, y: number }, rgb: { r: number, g: number, b: number }) => {
-    showDiv.innerText = `x: ${position.x}, y: ${position.y}`;
-    showDiv.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-});
+ipcRenderer.on(
+    "rgb",
+    (
+        _e,
+        position: { x: number; y: number },
+        rgb: { r: number; g: number; b: number }
+    ) => {
+        showDiv.innerText = `x: ${position.x}, y: ${position.y}`;
+        showDiv.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+);
 
 ipcRenderer.on("settingDone", () => {
     tipSpan.innerText = AppState.NotMonitor;
@@ -52,3 +61,18 @@ ipcRenderer.on("stopMonitoring", () => {
     monitoringBtn.innerText = "开始检测";
     settingBtn.disabled = false;
 });
+
+// const link = document.getElementsByTagName("link").item(1);
+// if (!link) {
+//     throw Error("link");
+// }
+
+// link.href = remote.nativeTheme.shouldUseDarkColors
+//     ? "./css/dark.css"
+//     : "./css/light.css";
+
+// remote.nativeTheme.on("updated", () => {
+//     link.href = remote.nativeTheme.shouldUseDarkColors
+//         ? "./css/dark.css"
+//         : "./css/light.css";
+// });

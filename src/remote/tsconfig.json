@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "target": "ES6",
+        "outDir": "../../view/js",
+        "lib": ["DOM"],
+        "sourceMap": true,
+        "rootDir": "./",
+        "strict": true,
+        "skipLibCheck": true
+    },
+    "exclude": ["node_modules"]
+}

@@ -6,4 +6,5 @@ document.onmousemove = e => {
 
 document.onclick = () => {
     ipcRenderer.send("closeSettingWin");
+    window.close();
 };

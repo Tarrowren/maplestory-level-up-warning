@@ -1,29 +1,38 @@
 {
     "name": "maplestory-level-up-warning",
-    "version": "1.0.0",
-    "description": "MapleStory升级警告",
+    "version": "1.1.0",
+    "description": "MapleStory 升级警告",
+    "main": "./out/main.js",
+    "scripts": {
+        "compile": "tsc -p ./src & tsc -p ./src/remote",
+        "watch": "tsc -watch -p ./src",
+        "watch-remote": "tsc -watch -p ./src/remote",
+        "lint": "eslint src --ext ts",
+        "pretest": "npm run compile && npm run lint"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tarrowren/maplestory-level-up-warning.git"
+    },
     "keywords": [
         "MapleStory",
         "Electron"
     ],
-    "main": "out/main.js",
-    "scripts": {
-        "rebuild": "node-gyp rebuild"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Tarrowren/maplestory-level-up-warning"
-    },
-    "author": "Tarrow",
-    "license": "MIT",
+    "author": "Tarrowren",
+    "license": "ISC",
     "bugs": {
         "url": "https://github.com/Tarrowren/maplestory-level-up-warning/issues"
     },
     "homepage": "https://github.com/Tarrowren/maplestory-level-up-warning#readme",
     "devDependencies": {
-        "@types/node": "^13.1.1",
-        "electron": "^6.1.7",
-        "tslint": "^5.20.1",
-        "typescript": "^3.7.4"
+        "@types/node": "^13.7.7",
+        "@typescript-eslint/eslint-plugin": "^2.22.0",
+        "@typescript-eslint/parser": "^2.22.0",
+        "bootstrap": "^4.4.1",
+        "electron": "^8.0.3",
+        "electron-builder": "^22.3.6",
+        "eslint": "^6.8.0",
+        "node-win-pixel": "git+https://github.com/Tarrowren/node-win-pixel.git",
+        "typescript": "^3.8.3"
     }
 }
