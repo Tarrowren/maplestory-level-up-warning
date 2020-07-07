@@ -29,7 +29,7 @@
         "@typescript-eslint/eslint-plugin": "^2.22.0",
         "@typescript-eslint/parser": "^2.22.0",
         "bootstrap": "^4.4.1",
-        "electron": "^8.0.3",
+        "electron": "^8.2.4",
         "electron-builder": "^22.3.6",
         "eslint": "^6.8.0",
         "node-win-pixel": "git+https://github.com/Tarrowren/node-win-pixel.git",
